@@ -12,3 +12,4 @@
 
 * MONGODB_URI: The uri to your [MongoDB](http://docs.mongodb.org/manual/reference/connection-string/) server.
 * LOGGER_LOGGING_LEVEL: Loggers local logging level. (See [winston](https://github.com/winstonjs/winston) documentation for more info.)
+* LOGGER_PORT: Port to run the application on. (Defaults to 3000.)
