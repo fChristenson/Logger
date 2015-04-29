@@ -10,6 +10,7 @@ var Log = mongoose.model('log', {
 
 	app: 'string',
 	version: 'string',
+	type: 'string',
 	time: 'string',
 	miliseconds: 'number',
 	log: 'object'
@@ -28,6 +29,7 @@ module.exports.save = function (req) {
 
 			app: req.params.appname,
 			version: req.params.appversion,
+			type: req.params.type,
 			time: moment(time).format(timestampFormat),
 			miliseconds: time,
 			log: req.body
@@ -35,7 +37,7 @@ module.exports.save = function (req) {
 		});
 
 		log.save();
-		logging.debug('save ok', log);
+		logging.debug('save ok', req.body);
 
 	} catch (err) {
 
@@ -51,7 +53,7 @@ module.exports.save = function (req) {
 
 	return {
 
-			result: 'Log saved for ' + log.app + ' version ' + log.version + ' timestamp ' + log.time,
+			result: 'Log saved',
 			log: log
 
 		};
@@ -64,40 +66,51 @@ var handlerError = function (err, name, res) {
 
 };
 
-var findLogsByAppVersion = function (req, res, from, to) {
-	logging.debug('findLogsByAppVersion', req.params.app, req.params.version, req.params.from, req.params.to);
+var callback = function (res, functionName) {
 
-	Log.find({app: req.params.app, version: req.params.version})
-	   .where('miliseconds')
-	   .gte(from)
-	   .lte(to)
-	   .exec(function (err, result) {
 
-	   	if (err) return handlerError(err, 'findLogsByAppVersion', res);
+	return function (err, result) {
 
-		logging.debug('findLogsByAppVersion result', result);
-		return res.json(result);
+			logging.debug('callback', functionName);
 
-	});
+		    if (err) return handlerError(err, functionName, res);
+
+			return res.json(result);
+
+		};
 
 };
 
-var findLogs = function (res, from, to) {
-	logging.debug('findLogs', from, to);
+var findLogsByAppVersion = function (req, res, from, to) {
+	logging.debug('findLogsByAppVersion', req.params.app, req.params.version, req.params.from, req.params.to);
 
-	Log.find({})
+	var query = {app: req.params.app, version: req.params.version};
+
+	if (req.query.type) query.type = req.query.type;
+	logging.debug('findLogsByAppVersion query', query);
+
+	Log.find(query)
 	   .where('miliseconds')
 	   .gte(from)
 	   .lte(to)
-	   .exec(function (err, result) {
+	   .exec(callback(res, 'findLogsByAppVersion'));
 
-	    if (err) return handlerError(err, 'findLogs', res);
+};
 
-		logging.debug('findLogs result', result);
-		return res.json(result);
+var findLogs = function (req, res, from, to) {
+	logging.debug('findLogs', from, to);
 
-	});
+	var query = {};
 
+	if (req.query.type) query.type = req.query.type;
+	logging.debug('findLogs query', query);
+
+	Log.find(query)
+	   .where('miliseconds')
+	   .gte(from)
+	   .lte(to)
+	   .exec(callback(res, 'findLogs'));
+	   
 };
 
 var dateStringToMilliseconds = function (dateString) {
@@ -120,18 +133,16 @@ var findLogsInRange = function (req, res) {
 
 	logging.debug('findLogsInRange from to',from, to, moment(from).format(timestampFormat), moment(to).format(timestampFormat));
 
-	Log.find({app: req.params.app, version: req.params.version})
+	var query = {app: req.params.app, version: req.params.version};
+
+	if (req.query.type) query.type = req.query.type;
+	logging.debug('findLogsInRange query', query);
+
+	Log.find(query)
 	   .where('miliseconds')
 	   .gte(from)
 	   .lte(to)
-	   .exec(function (err, result) {
-
-	   	if (err) return handlerError(err, 'findLogsInRange', res);
-
-		logging.debug('findLogsInRange result', result);
-		return res.json(result);
-
-	});
+	   .exec(callback(res, 'findLogsInRange'));
 
 };
 
@@ -154,7 +165,7 @@ module.exports.list = function (req, res) {
 
 		} else {
 
-			findLogs(res, twentyfourHoursAgo, now);
+			findLogs(req, res, twentyfourHoursAgo, now);
 
 		}
 

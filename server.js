@@ -10,9 +10,7 @@ app.use(bodyParser.json());
 
 var routes = {
 
-	description: 'Logger: simple logging service',
-	version: '0.0.1',
-	routes: ['/create', '/list', '/list/:app/:version', '/list/:app/:version/:from/:to'],
+	routes: ['/create/:appname/:appversion/:type', '/list?type', '/list/:app/:version?type', '/list/:app/:version/:from/:to?type'],
 	notes: ':from & :to should use the format YYYY-MM-DD_HH:MM:SS'
 
 };
@@ -45,9 +43,9 @@ app.get('/list/:app/:version/:from/:to', function (req, res) {
 
 });
 
-app.post('/create/:appname/:appversion', function (req, res) {
+app.post('/create/:appname/:appversion/:type', function (req, res) {
 
-	log.debug('POST: /create/:appname/:appversion');
+	log.debug('POST: /create/:appname/:appversion/:type');
 	res.json(loggerService.save(req));
 
 });
