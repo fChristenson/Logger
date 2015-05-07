@@ -1,12 +1,11 @@
 FROM node
+
 MAINTAINER Fidde
 
-RUN apt-get update && apt-get install -y npm
+COPY . /logger
 
-RUN npm install -g pm2
+WORKDIR /logger
 
-ENV LOGGER_PORT 80
+EXPOSE 3000
 
-EXPOSE 80
-
-CMD bash
+CMD node server.js
